@@ -4,6 +4,20 @@
     --text-color: #333;
     --white-color: #fff;
     --shadow-color: rgba(0, 0, 0, 0.1);
+    --container-bg: #fff;
+    --btn-hover: #357abd;
+    --gradient: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+}
+
+body.dark-mode {
+    --primary-color: #6ab0ff;
+    --background-color: #1a1a2e;
+    --text-color: #e0e0e0;
+    --white-color: #1e1e2f;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --container-bg: #16213e;
+    --btn-hover: #5a9ee0;
+    --gradient: linear-gradient(to right, #0f3460 0%, #16213e 100%);
 }
 
 body {
@@ -15,36 +29,71 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+    background-image: var(--gradient);
+    transition: background-image 0.4s ease, background-color 0.4s ease;
+}
+
+#theme-toggle {
+    position: fixed;
+    top: 1.2rem;
+    right: 1.2rem;
+    background: var(--container-bg);
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    width: 46px;
+    height: 46px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#theme-toggle:hover {
+    transform: scale(1.15) rotate(20deg);
 }
 
 .container {
     text-align: center;
-    background-color: var(--white-color);
+    background-color: var(--container-bg);
     padding: 2rem 3rem;
     border-radius: 12px;
     box-shadow: 0 10px 20px var(--shadow-color);
+    transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 h1 {
     color: var(--primary-color);
     margin-bottom: 1.5rem;
+    transition: color 0.4s ease;
 }
 
 #generate-btn {
     background-color: var(--primary-color);
-    color: var(--white-color);
+    color: #fff;
     border: none;
     padding: 1rem 2rem;
     font-size: 1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.15s ease;
     box-shadow: 0 4px 6px var(--shadow-color);
 }
 
 #generate-btn:hover {
-    background-color: #357abd;
+    background-color: var(--btn-hover);
+}
+
+#generate-btn:active {
+    transform: scale(0.96);
+}
+
+#generate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .result-container {
@@ -53,27 +102,26 @@ h1 {
     gap: 1rem;
     margin-top: 2rem;
     flex-wrap: wrap;
+    min-height: 70px;
+}
+
+/* Ball entrance animation */
+@keyframes ballDrop {
+    0%   { opacity: 0; transform: translateY(-60px) scale(0.5) rotate(-30deg); }
+    60%  { transform: translateY(8px) scale(1.1) rotate(5deg); }
+    80%  { transform: translateY(-4px) scale(0.97) rotate(-2deg); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+/* Slot-machine rolling animation inside the ball */
+@keyframes rollNumber {
+    0%   { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
 lotto-ball {
-    --ball-color: #ccc; /* Default color */
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--white-color);
-    background-color: var(--ball-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transform: scale(1);
-    transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-lotto-ball:hover {
-    transform: scale(1.1);
+    display: inline-block;
+    animation: ballDrop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (max-width: 600px) {
