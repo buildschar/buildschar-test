@@ -1,1 +1,89 @@
-/* Add styles here */
+:root {
+    --primary-color: #4a90e2;
+    --background-color: #f0f4f8;
+    --text-color: #333;
+    --white-color: #fff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+}
+
+.container {
+    text-align: center;
+    background-color: var(--white-color);
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px var(--shadow-color);
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+#generate-btn {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+#generate-btn:hover {
+    background-color: #357abd;
+}
+
+.result-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+lotto-ball {
+    --ball-color: #ccc; /* Default color */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--white-color);
+    background-color: var(--ball-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+lotto-ball:hover {
+    transform: scale(1.1);
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 1.5rem;
+    }
+
+    lotto-ball {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
