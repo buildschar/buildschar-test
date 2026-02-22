@@ -1,3 +1,4 @@
+// ── LottoBall Web Component ───────────────────────────────────────────────────
 class LottoBall extends HTMLElement {
     constructor() {
         super();
@@ -5,19 +6,27 @@ class LottoBall extends HTMLElement {
     }
 
     connectedCallback() {
-        const number = this.getAttribute('number');
-        const delay = this.getAttribute('delay') || '0';
-        const color = this.getColorForNumber(number);
+        const delay = parseInt(this.getAttribute('delay') || '0', 10);
 
         this.shadowRoot.innerHTML = `
             <style>
-                @keyframes rollIn {
-                    0%   { opacity: 0; transform: translateY(-20px) scale(0.6); }
-                    70%  { transform: translateY(4px) scale(1.08); }
-                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                @keyframes dropIn {
+                    0%   { opacity: 0; transform: translateY(-70px) scale(0.4) rotate(-20deg); }
+                    55%  { transform: translateY(8px) scale(1.12) rotate(4deg); }
+                    75%  { transform: translateY(-4px) scale(0.96) rotate(-1deg); }
+                    100% { opacity: 1; transform: none; }
+                }
+                @keyframes lockPop {
+                    0%   { transform: scale(1); }
+                    40%  { transform: scale(1.4); }
+                    68%  { transform: scale(0.88); }
+                    100% { transform: scale(1); }
+                }
+                @keyframes numFlip {
+                    0%   { opacity: 0; transform: translateY(-8px) scaleY(0.4); }
+                    100% { opacity: 1; transform: none; }
                 }
                 :host {
-                    --ball-color: ${color};
                     width: 60px;
                     height: 60px;
                     border-radius: 50%;
@@ -27,22 +36,64 @@ class LottoBall extends HTMLElement {
                     font-size: 1.5rem;
                     font-weight: bold;
                     color: white;
-                    background: radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 70%, white), ${color});
+                    background: var(--ball-bg, radial-gradient(circle at 35% 35%, #ccc, #888));
                     box-shadow: 0 4px 12px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.3);
-                    transition: transform 0.25s ease, box-shadow 0.25s ease;
-                    animation: rollIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms both;
+                    animation: dropIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms both;
+                    transition: transform 0.22s ease, box-shadow 0.22s ease;
                 }
-                :host(:hover) {
-                    transform: scale(1.15) translateY(-3px);
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.3);
+                :host(.locked):hover {
+                    transform: scale(1.15) translateY(-4px);
+                    box-shadow: 0 10px 24px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.35);
                 }
-                div {
-                    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                :host(.popping) {
+                    animation: lockPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+                }
+                .num {
+                    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
                     user-select: none;
                 }
+                .num.flip {
+                    animation: numFlip 0.09s ease both;
+                }
             </style>
-            <div>${number}</div>
+            <span class="num">?</span>
         `;
+    }
+
+    roll(finalNumber, startDelay, rollDuration) {
+        const numEl = this.shadowRoot.querySelector('.num');
+        const finalColor = this.getColorForNumber(finalNumber);
+
+        const flip = (text) => {
+            numEl.classList.remove('flip');
+            void numEl.offsetWidth;
+            numEl.textContent = text;
+            numEl.classList.add('flip');
+        };
+
+        setTimeout(() => {
+            let ms = 60;
+            let elapsed = 0;
+
+            const tick = () => {
+                if (elapsed >= rollDuration) {
+                    flip(finalNumber);
+                    this.style.setProperty('--ball-bg',
+                        `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${finalColor} 55%, white), ${finalColor})`
+                    );
+                    this.classList.add('popping', 'locked');
+                    spawnConfetti(this.getBoundingClientRect());
+                    setTimeout(() => this.classList.remove('popping'), 500);
+                    return;
+                }
+                flip(Math.floor(Math.random() * 45) + 1);
+                elapsed += ms;
+                ms = Math.min(ms * 1.13, 240);
+                setTimeout(tick, ms);
+            };
+
+            tick();
+        }, startDelay);
     }
 
     getColorForNumber(number) {
@@ -57,6 +108,32 @@ class LottoBall extends HTMLElement {
 
 customElements.define('lotto-ball', LottoBall);
 
+// ── Confetti burst ────────────────────────────────────────────────────────────
+function spawnConfetti(rect) {
+    const colors = ['#fbc400', '#69c8f2', '#ff7272', '#b0d840', '#fff', '#4a90e2'];
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+        const dist = 45 + Math.random() * 45;
+        const p = document.createElement('div');
+        p.className = 'confetti-particle';
+        p.style.cssText = `
+            left:${cx}px;
+            top:${cy}px;
+            width:${5 + Math.random() * 6}px;
+            height:${5 + Math.random() * 6}px;
+            background:${colors[i % colors.length]};
+            border-radius:${Math.random() > 0.4 ? '50%' : '2px'};
+            --dx:${(Math.cos(angle) * dist).toFixed(1)}px;
+            --dy:${(Math.sin(angle) * dist).toFixed(1)}px;
+        `;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 750);
+    }
+}
+
 // ── Dark / Light mode toggle ──────────────────────────────────────────────────
 const themeToggle = document.getElementById('theme-toggle');
 
@@ -66,7 +143,6 @@ function applyTheme(dark) {
     localStorage.setItem('theme', dark ? 'dark' : 'light');
 }
 
-// Restore saved preference (or system preference)
 const savedTheme = localStorage.getItem('theme');
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
@@ -81,17 +157,17 @@ const generateBtn = document.getElementById('generate-btn');
 generateBtn.addEventListener('click', () => {
     const resultContainer = document.getElementById('result');
     generateBtn.disabled = true;
+    generateBtn.textContent = '🎱 Rolling...';
+    generateBtn.classList.add('generating');
 
-    // Shake existing balls out if any
     const existing = resultContainer.querySelectorAll('lotto-ball');
     if (existing.length > 0) {
         existing.forEach((ball, i) => {
-            ball.style.transition = `opacity 0.2s ease ${i * 40}ms, transform 0.2s ease ${i * 40}ms`;
+            ball.style.transition = `opacity 0.18s ease ${i * 35}ms, transform 0.18s ease ${i * 35}ms`;
             ball.style.opacity = '0';
-            ball.style.transform = 'scale(0.5) translateY(20px)';
+            ball.style.transform = 'scale(0.4) translateY(20px)';
         });
-
-        setTimeout(() => buildBalls(resultContainer), existing.length * 40 + 220);
+        setTimeout(() => buildBalls(resultContainer), existing.length * 35 + 220);
     } else {
         buildBalls(resultContainer);
     }
@@ -104,16 +180,22 @@ function buildBalls(container) {
     while (numbers.size < 6) {
         numbers.add(Math.floor(Math.random() * 45) + 1);
     }
-
     const sorted = Array.from(numbers).sort((a, b) => a - b);
-    const totalDelay = sorted.length * 100 + 450;
 
     sorted.forEach((number, i) => {
         const ball = document.createElement('lotto-ball');
         ball.setAttribute('number', number);
-        ball.setAttribute('delay', i * 100);
+        ball.setAttribute('delay', i * 80);
         container.appendChild(ball);
+        // Start slot-machine rolling after the drop-in animation completes
+        ball.roll(number, i * 80 + 520, 900);
     });
 
-    setTimeout(() => { generateBtn.disabled = false; }, totalDelay);
+    // Re-enable button after last ball locks
+    const lastLockAt = 5 * 80 + 520 + 900 + 400;
+    setTimeout(() => {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Numbers';
+        generateBtn.classList.remove('generating');
+    }, lastLockAt);
 }
